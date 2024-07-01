@@ -15,14 +15,14 @@ encode = lambda s: [stoi[c] for c in s] # str -> [int]
 decode = lambda l: ''.join([itos[i] for i in l]) # [int] -> str
 
 #Hyperparameters
-batch_size = 4
-block_size = 8
-emb_dim = 32
-n_head = 16
+batch_size = 64
+block_size = 256
+emb_dim = 384
+n_head = 6
 vocab_size = len(chars)
-max_iters = 1000
-eval_interval = 100
-eval_iters = 20
+max_iters = 5000
+eval_interval = 500
+eval_iters = 200
 lr = 3e-4
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 n_layers = 6
@@ -177,6 +177,7 @@ m = model.to(device)
 print(sum(p.numel() for p in m.parameters())/1e6, 'M parameters')
 optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
 
+#Training Loop
 for iter in range(max_iters):
     #Eval loss on train and valid sets every once in a while
     if iter % eval_interval == 0 or iter == max_iters - 1:
