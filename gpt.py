@@ -196,4 +196,6 @@ for iter in range(max_iters):
 #Generate from the model
 context = torch.zeros((1, 1), dtype=torch.long, device=device)
 print(decode(m.generate(context, max_new_tokens=500)[0].tolist()))
+open('more.txt', 'w').write(decode(m.generate(context, max_new_tokens=10000)[0].tolist()))
+torch.cuda.empty_cache()
 
