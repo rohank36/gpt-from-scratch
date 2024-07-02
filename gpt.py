@@ -15,6 +15,7 @@ encode = lambda s: [stoi[c] for c in s] # str -> [int]
 decode = lambda l: ''.join([itos[i] for i in l]) # [int] -> str
 
 #Hyperparameters
+"""
 batch_size = 64
 block_size = 256
 emb_dim = 384
@@ -27,6 +28,19 @@ lr = 3e-4
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 n_layers = 6
 dropout = 0.2
+"""
+batch_size = 32
+block_size = 64
+emb_dim = 128
+n_head = 4
+vocab_size = len(chars)
+max_iters = 200
+eval_interval = 100
+eval_iters = 50
+lr = 1e-3
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+n_layers = 2
+dropout = 0.1
 #----------------
 torch.manual_seed(1337)
 
@@ -73,12 +87,13 @@ class Head(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, inputs):
+        B,T,C = inputs.shape
         query = self.WQ(inputs) #(4,8,16) = (batch_size, block_size, head_dim)
         key = self.WK(inputs) #(4,8,16) = (batch_size, block_size, head_dim)
         value = self.WV(inputs) #(4,8,16) = (batch_size, block_size, head_dim)
-        attention_matrix = query @ key.transpose(-2,-1) / key.shape[-1]**-0.5 #(4,8,8) = (batch_size, block_size, block_size)
+        attention_matrix = query @ key.transpose(-2,-1) * key.shape[-1]**-0.5 #(4,8,8) = (batch_size, block_size, block_size)
         #tril = torch.tril(torch.ones(block_size,block_size))
-        attention_matrix = attention_matrix.masked_fill(self.tril[:block_size,:block_size] == 0, float('-inf'))
+        attention_matrix = attention_matrix.masked_fill(self.tril[:T,:T] == 0, float('-inf'))
         attention_weights = F.softmax(attention_matrix, dim=-1) #softmax along the cols
         attention_weights = self.dropout(attention_weights)
         outputs = attention_weights @ value #(4,8,16) = (batch_size, block_size, head_dim)
@@ -145,8 +160,9 @@ class GPTLanguageModel(nn.Module):
             torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
     def forward(self, inputs, targets=None):
+        B, T = inputs.shape
         tok_emb = self.token_emb_table(inputs)
-        pos_emb = self.pos_emb_table(torch.arange(block_size, device=device)) #(block_size, emb_dim)
+        pos_emb = self.pos_emb_table(torch.arange(T, device=device)) #(block_size, emb_dim)
         x = tok_emb + pos_emb #(batch_size, block_size, emb_dim)
         x = self.blocks(x) #(batch_size, block_size, emb_dim)
         x = self.layerFinal_norm(x) #(batch_size, block_size, emb_dim)
@@ -195,7 +211,7 @@ for iter in range(max_iters):
 
 #Generate from the model
 context = torch.zeros((1, 1), dtype=torch.long, device=device)
-print(decode(m.generate(context, max_new_tokens=500)[0].tolist()))
-open('more.txt', 'w').write(decode(m.generate(context, max_new_tokens=10000)[0].tolist()))
+print(decode(m.generate(context, max_new_tokens=1000)[0].tolist()))
+#open('more.txt', 'w').write(decode(m.generate(context, max_new_tokens=10000)[0].tolist()))
 torch.cuda.empty_cache()
 
