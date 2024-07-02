@@ -3,6 +3,7 @@ import torch.nn as nn
 import pickle
 from gpt import GPTLanguageModel
 
+"""
 model_path = "./model_2m.pth"
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -11,7 +12,6 @@ model.load_state_dict(torch.load(model_path))
 model.to(device)
 model.eval()
 
-"""
 with open ('input.txt','r',encoding='utf-8') as f:
     text = f.read()
 chars = sorted(list(set(text)))
