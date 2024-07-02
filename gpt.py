@@ -1,3 +1,4 @@
+import pickle
 import torch
 import torch.nn as nn 
 from torch.nn import functional as F
@@ -29,18 +30,20 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 n_layers = 6
 dropout = 0.2
 """
-batch_size = 32
-block_size = 64
-emb_dim = 128
-n_head = 4
+#Scaled down Hyperparameters
+batch_size = 32*2
+block_size = 64*2
+emb_dim = 128*2
+n_head = 6
 vocab_size = len(chars)
-max_iters = 200
-eval_interval = 100
-eval_iters = 50
+#max_iters = 1000*'
+max_iters = 3500
+eval_interval = 200
+eval_iters = 100
 lr = 1e-3
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-n_layers = 2
-dropout = 0.1
+n_layers = 3
+dropout = 0.2
 #----------------
 torch.manual_seed(1337)
 
@@ -199,6 +202,9 @@ for iter in range(max_iters):
     if iter % eval_interval == 0 or iter == max_iters - 1:
         losses = estimate_loss()
         print(f"step {iter}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
+        context = torch.zeros((1, 1), dtype=torch.long, device=device)
+        print(f"{decode(m.generate(context, max_new_tokens=500)[0].tolist())}\n")
+        print("====================================================================\n")
 
     #Sample a batch of data
     xb, yb = get_batch('train')
@@ -213,5 +219,10 @@ for iter in range(max_iters):
 context = torch.zeros((1, 1), dtype=torch.long, device=device)
 print(decode(m.generate(context, max_new_tokens=1000)[0].tolist()))
 #open('more.txt', 'w').write(decode(m.generate(context, max_new_tokens=10000)[0].tolist()))
+
+# Save the model
+model_path = './model.pth'
+torch.save(model.state_dict(), model_path)
+
 torch.cuda.empty_cache()
 
