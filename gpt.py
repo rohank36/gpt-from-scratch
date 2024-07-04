@@ -16,7 +16,6 @@ encode = lambda s: [stoi[c] for c in s] # str -> [int]
 decode = lambda l: ''.join([itos[i] for i in l]) # [int] -> str
 
 #Hyperparameters
-
 batch_size = 64
 block_size = 256
 emb_dim = 384
